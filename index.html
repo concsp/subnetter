@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VLSM Planner (IPv4)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    label { display: block; font-size: 14px; margin-bottom: 6px; }
+    input, select, button, textarea { font: inherit; padding: 10px; border: 1px solid #bbb; border-radius: 10px; }
+    input, select, textarea { min-width: 260px; }
+    button { cursor: pointer; }
+    .card { border: 1px solid #ddd; border-radius: 16px; padding: 14px; margin-top: 16px; }
+    .error { color: #b00020; white-space: pre-wrap; }
+    .muted { color: #666; font-size: 14px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #eee; text-align: left; padding: 10px 8px; vertical-align: top; }
+    th { font-size: 13px; color: #444; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>VLSM Planner (IPv4)</h1>
+  <p class="muted">
+    Enter a base network and host requirements. Allocates largest blocks first (standard VLSM practice).
+  </p>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="base">Base network (CIDR)</label>
+        <input id="base" value="10.10.0.0/16" placeholder="e.g. 172.20.0.0/16" />
+      </div>
+
+      <div>
+        <label for="gateway">Gateway policy</label>
+        <select id="gateway">
+          <option value="first" selected>First usable (.1 style)</option>
+          <option value="last">Last usable</option>
+        </select>
+      </div>
+
+      <div style="flex: 1 1 320px;">
+        <label for="hosts">Hosts per subnet (comma-separated)</label>
+        <textarea id="hosts" rows="2" placeholder="e.g. 30000, 13000, 2, 50">30000, 13000, 2</textarea>
+      </div>
+
+      <div>
+        <button id="calc">Calculate</button>
+      </div>
+    </div>
+
+    <div id="msg" class="error" style="margin-top:12px;"></div>
+    <div id="out"></div>
+  </div>
+
+<script>
+/** IPv4 helpers **/
+function ipToInt(ip) {
+  const parts = ip.trim().split(".");
+  if (parts.length !== 4) throw new Error(`Invalid IPv4 address: ${ip}`);
+  let n = 0;
+  for (const p of parts) {
+    if (!/^\d+$/.test(p)) throw new Error(`Invalid IPv4 octet: ${ip}`);
+    const v = Number(p);
+    if (v < 0 || v > 255) throw new Error(`IPv4 octet out of range: ${ip}`);
+    n = (n << 8) + v;
+  }
+  return n >>> 0;
+}
+
+function intToIp(n) {
+  return [
+    (n >>> 24) & 255,
+    (n >>> 16) & 255,
+    (n >>> 8) & 255,
+    n & 255
+  ].join(".");
+}
+
+function prefixToMask(prefix) {
+  if (prefix < 0 || prefix > 32) throw new Error(`Invalid prefix: /${prefix}`);
+  let mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  return intToIp(mask);
+}
+
+function parseCidr(cidr) {
+  const [ipStr, preStr] = cidr.trim().split("/");
+  if (!ipStr || preStr === undefined) throw new Error(`Invalid CIDR: ${cidr}`);
+  const prefix = Number(preStr);
+  if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) throw new Error(`Invalid prefix in CIDR: ${cidr}`);
+  const ip = ipToInt(ipStr);
+  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  const network = ip & mask;
+  // strict=True behavior: base must be the actual network address
+  if (network !== ip) throw new Error(`Base CIDR must be a network address. Did you mean ${intToIp(network)}/${prefix}?`);
+  const size = prefix === 32 ? 1 : (2 ** (32 - prefix));
+  const broadcast = (network + size - 1) >>> 0;
+  return { cidr: `${intToIp(network)}/${prefix}`, network, prefix, mask, size, broadcast };
+}
+
+function hostsToPrefix(hostsNeeded) {
+  if (!Number.isInteger(hostsNeeded) || hostsNeeded <= 0) throw new Error(`Hosts must be a positive integer: ${hostsNeeded}`);
+  // normal LAN rule: usable = 2^hostBits - 2 => total addresses >= hosts + 2
+  const totalNeeded = hostsNeeded + 2;
+  const hostBits = Math.ceil(Math.log2(totalNeeded));
+  let prefix = 32 - hostBits;
+  // clamp to /30 minimum for usable hosts
+  if (prefix > 30) prefix = 30;
+  if (prefix < 0) throw new Error(`Hosts requirement too large for IPv4: ${hostsNeeded}`);
+  return prefix;
+}
+
+function alignUp(addr, blockSize) {
+  // next multiple of blockSize
+  const rem = addr % blockSize;
+  return rem === 0 ? addr : (addr + (blockSize - rem)) >>> 0;
+}
+
+function subnetInfo(networkInt, prefix, gatewayPolicy) {
+  const size = prefix === 32 ? 1 : (2 ** (32 - prefix));
+  const broadcast = (networkInt + size - 1) >>> 0;
+  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+
+  let usableHosts = 0;
+  let firstUsable = null;
+  let lastUsable = null;
+  if (prefix <= 30) {
+    usableHosts = size - 2;
+    firstUsable = networkInt + 1;
+    lastUsable = broadcast - 1;
+  } else if (prefix === 31) {
+    // not used by this tool unless you add it, but included for completeness
+    usableHosts = 2;
+    firstUsable = networkInt;
+    lastUsable = broadcast;
+  } else {
+    usableHosts = 1;
+    firstUsable = networkInt;
+    lastUsable = networkInt;
+  }
+
+  const gateway = gatewayPolicy === "last" ? lastUsable : firstUsable;
+
+  return {
+    cidr: `${intToIp(networkInt)}/${prefix}`,
+    network: intToIp(networkInt),
+    netmask: intToIp(mask >>> 0),
+    broadcast: intToIp(broadcast),
+    usableHosts,
+    range: (firstUsable !== null) ? `${intToIp(firstUsable)} - ${intToIp(lastUsable)}` : "N/A",
+    gateway: (gateway !== null) ? intToIp(gateway) : "N/A",
+    size
+  };
+}
+
+function allocateVlsm(base, prefixes, gatewayPolicy) {
+  // Largest blocks first => smallest prefix number first
+  const sorted = [...prefixes].sort((a,b) => a - b);
+
+  let cursor = base.network;
+  const end = base.broadcast;
+  const allocations = [];
+
+  for (const prefix of sorted) {
+    const blockSize = prefix === 32 ? 1 : (2 ** (32 - prefix));
+    cursor = alignUp(cursor, blockSize);
+    const last = (cursor + blockSize - 1) >>> 0;
+
+    if (last > end) {
+      throw new Error(`Out of space: can't fit /${prefix} inside ${base.cidr} (needed ${blockSize} addrs).`);
+    }
+
+    allocations.push(subnetInfo(cursor, prefix, gatewayPolicy));
+    cursor = (last + 1) >>> 0;
+  }
+
+  return allocations;
+}
+
+/** UI **/
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById("calc").addEventListener("click", () => {
+  const msg = document.getElementById("msg");
+  const out = document.getElementById("out");
+  msg.textContent = "";
+  out.innerHTML = "";
+
+  try {
+    const base = parseCidr(document.getElementById("base").value);
+    const gatewayPolicy = document.getElementById("gateway").value;
+
+    const rawHosts = document.getElementById("hosts").value.trim();
+    if (!rawHosts) throw new Error("Enter at least one host requirement.");
+    const hosts = rawHosts.split(",").map(x => x.trim()).filter(Boolean).map(x => {
+      if (!/^\d+$/.test(x)) throw new Error(`Invalid host number: ${x}`);
+      return Number(x);
+    });
+
+    const prefixes = hosts.map(h => hostsToPrefix(h));
+    const allocations = allocateVlsm(base, prefixes, gatewayPolicy);
+
+    const rows = allocations.map((a, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><code>${escapeHtml(a.cidr)}</code></td>
+        <td>${escapeHtml(a.netmask)}</td>
+        <td>${escapeHtml(a.network)}</td>
+        <td>${escapeHtml(a.broadcast)}</td>
+        <td>${escapeHtml(String(a.usableHosts))}</td>
+        <td>${escapeHtml(a.range)}</td>
+        <td>${escapeHtml(a.gateway)}</td>
+      </tr>
+    `).join("");
+
+    out.innerHTML = `
+      <div class="muted" style="margin-top:8px;">
+        Base: <code>${escapeHtml(base.cidr)}</code> • Allocated in largest→smallest order
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>CIDR</th>
+            <th>Netmask</th>
+            <th>Network ID</th>
+            <th>Broadcast</th>
+            <th>Usable hosts</th>
+            <th>Usable range</th>
+            <th>Gateway</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    msg.textContent = e?.message ?? String(e);
+  }
+});
+</script>
+</body>
+</html>
