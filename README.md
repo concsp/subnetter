@@ -9,10 +9,9 @@ The app is fully static, runs on GitHub Pages, and requires no backend, accounts
 
 ## File Structure
 subnetter/
-|
-|-index.html
-|-style.css
-|-script.js
+├── index.html
+├── style.css
+└── script.js
 
 ## Features
 - IPv4 subnetting and VLSM practice
