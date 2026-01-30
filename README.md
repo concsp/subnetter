@@ -3,7 +3,9 @@
 ## File Structure
 subnetter/
 ├─ index.html
+
 ├─ style.css
+
 └─ script.js
 
 Subnetter is a lightweight, browser-based tool for practicing IPv4 subnetting, including VLSM, with realistic CCNA-style questions.
