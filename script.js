@@ -151,6 +151,72 @@ let current = [];
 let expectedHosts = [];
 let currentBase = null;
 
+/* ================= Scoreboard + anti-farming ================= */
+
+const SCORE_KEY = "subnetter_best_streak";
+let streakNow = 0;
+let streakBest = Number(localStorage.getItem(SCORE_KEY) || "0");
+
+// Anti-farming flags
+let questionScored = false;     // once true, you cannot gain streak again until New Question
+let inputsTouched = false;      // optional: require user to change at least one input before check
+
+const streakNowEl = document.getElementById("streakNow");
+const streakBestEl = document.getElementById("streakBest");
+const scorebarEl = document.getElementById("scorebar");
+
+// Toast + modal elements
+const toastEl = document.getElementById("toast");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalReview = document.getElementById("modalReview");
+const modalNew = document.getElementById("modalNew");
+
+function renderScore(){
+  if (streakNowEl) streakNowEl.textContent = String(streakNow);
+  if (streakBestEl) streakBestEl.textContent = String(streakBest);
+}
+renderScore();
+
+function pulse(el){
+  if (!el) return;
+  el.classList.add("pulse");
+  setTimeout(()=>el.classList.remove("pulse"), 600);
+}
+
+function showToast(text){
+  if (!toastEl) return;
+  toastEl.textContent = text;
+  toastEl.style.display = "block";
+  pulse(toastEl);
+  setTimeout(()=>{ toastEl.style.display = "none"; }, 2200);
+}
+
+function openModal(title, body){
+  if (!modalBackdrop) return;
+  modalTitle.textContent = title;
+  modalBody.innerHTML = body;
+  modalBackdrop.style.display = "flex";
+}
+
+function closeModal(){
+  if (!modalBackdrop) return;
+  modalBackdrop.style.display = "none";
+}
+
+modalReview?.addEventListener("click", () => {
+  closeModal();
+
+  // optional: scroll to the explanations after closing
+  document.getElementById("result")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+modalNew?.addEventListener("click", () => { closeModal(); newQuestion(); });
+modalBackdrop?.addEventListener("click", (e) => {
+  if (e.target === modalBackdrop) closeModal();
+});
+
+
 /* ================= Rendering ================= */
 function renderQuestion(diff){
   els.question.style.display = "";
@@ -189,6 +255,12 @@ function renderInputs(){
       </div>
     </div>
   `).join("");
+
+    // Mark inputs as touched if user edits anything (helps prevent "check blank" spam)
+  inputsTouched = false;
+  els.inputs.querySelectorAll("input[data-f]").forEach(inp => {
+    inp.addEventListener("input", () => { inputsTouched = true; }, { passive: true });
+  });
 }
 
 function collectRow(i){
@@ -203,6 +275,10 @@ function collectRow(i){
 function newQuestion(){
   els.result.style.display = "none";
   els.result.innerHTML = "";
+
+  questionScored = false;
+  inputsTouched = false;
+
 
   const diff = els.difficulty.value;
   const assignedPrefix = pickAssignedPrefix(diff);
@@ -239,6 +315,20 @@ function newQuestion(){
 
 /* ================= Answer checking ================= */
 function checkAnswers(){
+  // Anti-farming: don't allow scoring the same question multiple times
+  if (questionScored){
+    showToast("Already checked — generate a new question to continue your streak.");
+    pulse(scorebarEl);
+    return;
+  }
+
+  // Optional: require user to actually type something before checking
+  if (!inputsTouched){
+    showToast("Enter your answers first.");
+    return;
+  }
+
+
   let okAll = true;
   const explain = [];
 
@@ -284,18 +374,52 @@ Solve method:
   }
 
   els.result.style.display = "";
+
   if (okAll){
+    questionScored = true;        // lock scoring for this question
+    streakNow += 1;
+
+    let newBest = false;
+    if (streakNow > streakBest){
+      streakBest = streakNow;
+      localStorage.setItem(SCORE_KEY, String(streakBest));
+      newBest = true;
+    }
+
+    renderScore();
+    pulse(scorebarEl);
+
+    if (newBest){
+      showToast(`New best streak: ${streakBest} 🔥`);
+    } else {
+      showToast(`Correct — streak: ${streakNow}`);
+    }
+
     els.result.innerHTML = `<b style="color:var(--good)">All subnets correct.</b>`;
   } else {
+    questionScored = true; // also lock scoring; you must get a new question
+
+    const endedAt = streakNow;
+    streakNow = 0;
+    renderScore();
+    pulse(scorebarEl);
+
+  openModal(
+    "Streak ended",
+    `
+  <b>Your streak:</b> ${endedAt}<br>
+  <b>Best streak:</b> ${streakBest}<br><br>
+  Review the correct answers below to see where the calculation went wrong.
+  `
+  );
+
     const link = buildAiLink(currentBase, expectedHosts);
     els.result.innerHTML = `
       <details open>
         <summary>Show correct answers & explanations</summary>
         <pre>${explain.join("\n\n")}</pre>
         <div style="margin-top:10px;">
-          <a href="${link}" target="_blank">
-            Ask AI to explain how to solve this (detailed walkthrough)
-          </a>
+          <a href="${link}" target="_blank">Ask AI to explain how to solve this (detailed walkthrough)</a>
         </div>
       </details>
     `;

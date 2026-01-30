@@ -164,3 +164,93 @@ footer{
   font-size:13px;
   color:var(--muted);
 }
+
+/* ================= Score + Toast ================= */
+
+.scorebar{
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin: 14px auto 0;
+  max-width: 980px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 14px;
+  background: rgba(17,24,39,.7);
+  backdrop-filter: blur(6px);
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.toast{
+  position: fixed;
+  right: 16px;
+  bottom: 84px;
+  z-index: 20;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(96,165,250,.35);
+  background: rgba(17,24,39,.92);
+  color: #e5e7eb;
+  font-size: 13px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+
+/* simple, non-annoying feedback animation */
+.pulse{
+  animation: pulse 550ms ease-out;
+}
+@keyframes pulse{
+  0%{ transform: scale(1); }
+  50%{ transform: scale(1.04); }
+  100%{ transform: scale(1); }
+}
+
+/* ================= Modal ================= */
+
+.modalBackdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 30;
+}
+
+.modal{
+  width: 100%;
+  max-width: 520px;
+  background: rgba(17,24,39,.95);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+}
+
+.modal h2{
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.modal p{
+  margin: 0 0 14px 0;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.modal p b {
+  color: var(--text);
+}
+
+
+.modalBtns{
+  display:flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

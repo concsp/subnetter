@@ -40,6 +40,25 @@
   <div id="result" class="card" style="display:none;"></div>
 
 </div>
+</div> <!-- end .container -->
+
+<div id="scorebar" class="scorebar">
+  <div><b>Streak:</b> <span id="streakNow">0</span></div>
+  <div><b>Best:</b> <span id="streakBest">0</span></div>
+</div>
+
+<div id="toast" class="toast" style="display:none;"></div>
+
+<div id="modalBackdrop" class="modalBackdrop" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Streak ended</h2>
+    <p id="modalBody"></p>
+    <div class="modalBtns">
+      <button id="modalReview" class="primary">Review Correct Answers</button>
+      <button id="modalNew">New Question</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   Built by Cameron ·
@@ -51,5 +70,6 @@
 <!-- GoatCounter -->
 <script data-goatcounter="https://concsp.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
+        
 </body>
 </html>
