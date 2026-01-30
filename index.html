@@ -1,246 +1,300 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>VLSM Planner (IPv4)</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
-    label { display: block; font-size: 14px; margin-bottom: 6px; }
-    input, select, button, textarea { font: inherit; padding: 10px; border: 1px solid #bbb; border-radius: 10px; }
-    input, select, textarea { min-width: 260px; }
-    button { cursor: pointer; }
-    .card { border: 1px solid #ddd; border-radius: 16px; padding: 14px; margin-top: 16px; }
-    .error { color: #b00020; white-space: pre-wrap; }
-    .muted { color: #666; font-size: 14px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
-    th, td { border-bottom: 1px solid #eee; text-align: left; padding: 10px 8px; vertical-align: top; }
-    th { font-size: 13px; color: #444; }
-    code { background: #f6f6f6; padding: 2px 6px; border-radius: 8px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IPv4 Subnetting Practice (VLSM)</title>
+
+<style>
+:root{
+  --bg:#0b0f17;
+  --bg2:#070a10;
+  --card:#111827;
+  --muted:#94a3b8;
+  --text:#e5e7eb;
+  --line:rgba(148,163,184,.18);
+  --accent:#60a5fa;
+  --good:#34d399;
+  --bad:#fb7185;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  background:linear-gradient(180deg, var(--bg), var(--bg2));
+  color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.container{
+  max-width: 980px;
+  margin: 28px auto;
+  padding: 0 16px 56px;
+}
+h1{ margin:0; font-size:26px; }
+.sub{ color:var(--muted); font-size:14px; margin-top:6px; }
+
+.toolbar{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
+select, input, button{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(17,24,39,.75);
+  color:var(--text);
+}
+button{
+  cursor:pointer;
+  border-color: rgba(96,165,250,.35);
+}
+button.primary{
+  background: linear-gradient(180deg, rgba(96,165,250,.28), rgba(96,165,250,.12));
+}
+
+.card{
+  margin-top:16px;
+  background:rgba(17,24,39,.6);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+}
+
+.subnet{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  background:rgba(17,24,39,.48);
+}
+.subnetHeader{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.status{
+  font-size:13px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+}
+.status.good{ color:var(--good); }
+.status.bad{ color:var(--bad); }
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+@media(max-width:820px){
+  .grid{ grid-template-columns:1fr; }
+}
+
+.small{ font-size:13px; color:var(--muted); }
+code{
+  background:rgba(148,163,184,.12);
+  padding:2px 8px;
+  border-radius:10px;
+}
+a{ color:var(--accent); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+</style>
 </head>
+
 <body>
-  <h1>VLSM Planner (IPv4)</h1>
-  <p class="muted">
-    Enter a base network and host requirements. Allocates largest blocks first (standard VLSM practice).
-  </p>
+<div class="container">
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label for="base">Base network (CIDR)</label>
-        <input id="base" value="10.10.0.0/16" placeholder="e.g. 172.20.0.0/16" />
-      </div>
+<h1>IPv4 Subnetting Practice (VLSM)</h1>
+<div class="sub">Answer each subnet: Mask, CIDR, Network ID, Broadcast, First usable (Gateway), Last usable</div>
 
-      <div>
-        <label for="gateway">Gateway policy</label>
-        <select id="gateway">
-          <option value="first" selected>First usable (.1 style)</option>
-          <option value="last">Last usable</option>
-        </select>
-      </div>
-
-      <div style="flex: 1 1 320px;">
-        <label for="hosts">Hosts per subnet (comma-separated)</label>
-        <textarea id="hosts" rows="2" placeholder="e.g. 30000, 13000, 2, 50">30000, 13000, 2</textarea>
-      </div>
-
-      <div>
-        <button id="calc">Calculate</button>
-      </div>
-    </div>
-
-    <div id="msg" class="error" style="margin-top:12px;"></div>
-    <div id="out"></div>
+<div class="toolbar">
+  <div style="flex:1">
+    <label>Difficulty</label>
+    <select id="difficulty">
+      <option value="easy">Easy (1 subnet)</option>
+      <option value="medium">Medium (equal-size)</option>
+      <option value="hard">Hard (VLSM)</option>
+    </select>
   </div>
+  <div style="flex:1">
+    <label>&nbsp;</label>
+    <button class="primary" onclick="newQuestion()">New Question</button>
+  </div>
+  <div style="flex:1">
+    <label>&nbsp;</label>
+    <button onclick="checkAnswers()">Check Answers</button>
+  </div>
+</div>
+
+<div id="question" class="card" style="display:none;"></div>
+<div id="inputs"></div>
+<div id="result" class="card" style="display:none;"></div>
 
 <script>
-/** IPv4 helpers **/
-function ipToInt(ip) {
-  const parts = ip.trim().split(".");
-  if (parts.length !== 4) throw new Error(`Invalid IPv4 address: ${ip}`);
-  let n = 0;
-  for (const p of parts) {
-    if (!/^\d+$/.test(p)) throw new Error(`Invalid IPv4 octet: ${ip}`);
-    const v = Number(p);
-    if (v < 0 || v > 255) throw new Error(`IPv4 octet out of range: ${ip}`);
-    n = (n << 8) + v;
-  }
-  return n >>> 0;
-}
+/* ---------- helpers ---------- */
+const ipToInt = ip => ip.split('.').reduce((a,o)=>(a<<8)+(+o),0)>>>0;
+const intToIp = n => [n>>>24,n>>>16&255,n>>>8&255,n&255].join('.');
+const maskFromPrefix = p => p===0?0:(0xffffffff<<(32-p))>>>0;
 
-function intToIp(n) {
-  return [
-    (n >>> 24) & 255,
-    (n >>> 16) & 255,
-    (n >>> 8) & 255,
-    n & 255
-  ].join(".");
-}
+const normalizeIp = v => { try{return intToIp(ipToInt(v.trim()));}catch{return null;} };
+const normalizeCidr = v => v ? (v.trim().startsWith("/") ? v.trim() : "/" + v.trim()) : null;
 
-function prefixToMask(prefix) {
-  if (prefix < 0 || prefix > 32) throw new Error(`Invalid prefix: /${prefix}`);
-  let mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
-  return intToIp(mask);
-}
-
-function parseCidr(cidr) {
-  const [ipStr, preStr] = cidr.trim().split("/");
-  if (!ipStr || preStr === undefined) throw new Error(`Invalid CIDR: ${cidr}`);
-  const prefix = Number(preStr);
-  if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) throw new Error(`Invalid prefix in CIDR: ${cidr}`);
-  const ip = ipToInt(ipStr);
-  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
-  const network = ip & mask;
-  // strict=True behavior: base must be the actual network address
-  if (network !== ip) throw new Error(`Base CIDR must be a network address. Did you mean ${intToIp(network)}/${prefix}?`);
-  const size = prefix === 32 ? 1 : (2 ** (32 - prefix));
-  const broadcast = (network + size - 1) >>> 0;
-  return { cidr: `${intToIp(network)}/${prefix}`, network, prefix, mask, size, broadcast };
-}
-
-function hostsToPrefix(hostsNeeded) {
-  if (!Number.isInteger(hostsNeeded) || hostsNeeded <= 0) throw new Error(`Hosts must be a positive integer: ${hostsNeeded}`);
-  // normal LAN rule: usable = 2^hostBits - 2 => total addresses >= hosts + 2
-  const totalNeeded = hostsNeeded + 2;
-  const hostBits = Math.ceil(Math.log2(totalNeeded));
-  let prefix = 32 - hostBits;
-  // clamp to /30 minimum for usable hosts
-  if (prefix > 30) prefix = 30;
-  if (prefix < 0) throw new Error(`Hosts requirement too large for IPv4: ${hostsNeeded}`);
-  return prefix;
-}
-
-function alignUp(addr, blockSize) {
-  // next multiple of blockSize
-  const rem = addr % blockSize;
-  return rem === 0 ? addr : (addr + (blockSize - rem)) >>> 0;
-}
-
-function subnetInfo(networkInt, prefix, gatewayPolicy) {
-  const size = prefix === 32 ? 1 : (2 ** (32 - prefix));
-  const broadcast = (networkInt + size - 1) >>> 0;
-  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
-
-  let usableHosts = 0;
-  let firstUsable = null;
-  let lastUsable = null;
-  if (prefix <= 30) {
-    usableHosts = size - 2;
-    firstUsable = networkInt + 1;
-    lastUsable = broadcast - 1;
-  } else if (prefix === 31) {
-    // not used by this tool unless you add it, but included for completeness
-    usableHosts = 2;
-    firstUsable = networkInt;
-    lastUsable = broadcast;
-  } else {
-    usableHosts = 1;
-    firstUsable = networkInt;
-    lastUsable = networkInt;
-  }
-
-  const gateway = gatewayPolicy === "last" ? lastUsable : firstUsable;
-
+function subnetInfo(net,p){
+  const size = 2**(32-p);
   return {
-    cidr: `${intToIp(networkInt)}/${prefix}`,
-    network: intToIp(networkInt),
-    netmask: intToIp(mask >>> 0),
-    broadcast: intToIp(broadcast),
-    usableHosts,
-    range: (firstUsable !== null) ? `${intToIp(firstUsable)} - ${intToIp(lastUsable)}` : "N/A",
-    gateway: (gateway !== null) ? intToIp(gateway) : "N/A",
-    size
+    prefix:p,
+    mask:intToIp(maskFromPrefix(p)),
+    network:intToIp(net),
+    broadcast:intToIp(net+size-1),
+    gateway:intToIp(net+1),
+    last:intToIp(net+size-2),
+    blockSize:size
   };
 }
+function hostsToPrefix(h){ return 32 - Math.ceil(Math.log2(h+2)); }
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-function allocateVlsm(base, prefixes, gatewayPolicy) {
-  // Largest blocks first => smallest prefix number first
-  const sorted = [...prefixes].sort((a,b) => a - b);
+/* ---------- state ---------- */
+let current=[], expectedHosts=[], currentBase=null;
 
-  let cursor = base.network;
-  const end = base.broadcast;
-  const allocations = [];
+/* ---------- base selection ---------- */
+function randomBaseGeneral(){
+  const b=[["10.0.0.0",8],["172.16.0.0",16],["192.168.0.0",24]];
+  const [ip,p]=b[rand(0,2)];
+  return {net:ipToInt(ip),prefix:p};
+}
+function randomBaseMedium(){
+  const r=Math.random();
+  if(r<0.6) return {net:ipToInt("192.168.0.0"),prefix:24};
+  if(r<0.9) return {net:ipToInt("172.16.0.0"),prefix:16};
+  return {net:ipToInt("10.0.0.0"),prefix:8};
+}
 
-  for (const prefix of sorted) {
-    const blockSize = prefix === 32 ? 1 : (2 ** (32 - prefix));
-    cursor = alignUp(cursor, blockSize);
-    const last = (cursor + blockSize - 1) >>> 0;
+/* ---------- AI link ---------- */
+function buildAiLink(base, hosts){
+  const q =
+`show a detailed, step-by-step walkthrough explaining how to subnet
+${intToIp(base.net)}/${base.prefix}
+into ${hosts.length} subnets
+with host requirements ${hosts.join(", ")}.
+Include how to determine subnet sizes, CIDR prefixes, network IDs,
+broadcast addresses, and usable host ranges.`;
 
-    if (last > end) {
-      throw new Error(`Out of space: can't fit /${prefix} inside ${base.cidr} (needed ${blockSize} addrs).`);
+  return `https://www.google.com/search?udm=50&aep=11&q=${encodeURIComponent(q)}`;
+}
+
+
+/* ---------- generation ---------- */
+function newQuestion(){
+  document.getElementById("result").style.display="none";
+  const diff=document.getElementById("difficulty").value;
+  const base=(diff==="medium")?randomBaseMedium():randomBaseGeneral();
+  currentBase=base;
+
+  const count = diff==="easy"?1:rand(2,5);
+  let hostReqs=[];
+  if(diff==="medium"){
+    const usable=Math.floor((2**(32-base.prefix))/count)-2;
+    hostReqs=Array(count).fill(Math.max(30,Math.min(usable,4094)));
+  }else{
+    for(let i=0;i<count;i++) hostReqs.push(rand(10,200));
+  }
+
+  hostReqs.sort((a,b)=>b-a);
+
+  const prefixes=hostReqs.map(hostsToPrefix);
+  const total=prefixes.reduce((s,p)=>s+(2**(32-p)),0);
+  if(total>2**(32-base.prefix)) return newQuestion();
+
+  let cursor=base.net;
+  current=[];
+  prefixes.forEach(p=>{
+    const size=2**(32-p);
+    cursor=Math.ceil(cursor/size)*size;
+    current.push(subnetInfo(cursor,p));
+    cursor+=size;
+  });
+  expectedHosts=hostReqs;
+
+  document.getElementById("question").style.display="";
+  document.getElementById("question").innerHTML=`
+<b>Assigned block:</b> <code>${intToIp(base.net)}/${base.prefix}</code>
+<ul>${hostReqs.map((h,i)=>`<li>Subnet ${i+1}: ${h} hosts</li>`).join("")}</ul>
+${diff==="hard"?`<div class="small"><i>Allocate largest subnets first to avoid fragmentation.</i></div>`:""}
+`;
+  renderInputs();
+}
+
+function renderInputs(){
+  document.getElementById("inputs").innerHTML=current.map((_,i)=>`
+<div class="subnet">
+  <div class="subnetHeader">
+    <b>Subnet ${i+1}</b>
+    <span class="status" id="s${i}">—</span>
+  </div>
+  <div class="grid">
+    <div><label>Mask</label><input data-i="${i}" data-f="mask"></div>
+    <div><label>CIDR</label><input data-i="${i}" data-f="cidr"></div>
+    <div><label>Network ID</label><input data-i="${i}" data-f="network"></div>
+    <div><label>Broadcast</label><input data-i="${i}" data-f="broadcast"></div>
+    <div><label>First usable (Gateway)</label><input data-i="${i}" data-f="gateway"></div>
+    <div><label>Last usable</label><input data-i="${i}" data-f="last"></div>
+  </div>
+</div>`).join("");
+}
+
+/* ---------- checking ---------- */
+function checkAnswers(){
+  let ok=true, explain=[];
+  current.forEach((c,i)=>{
+    const box=document.querySelectorAll(".subnet")[i];
+    const f=Object.fromEntries([...box.querySelectorAll("input")].map(x=>[x.dataset.f,x.value]));
+    const good =
+      f.mask===c.mask &&
+      normalizeCidr(f.cidr)===`/${c.prefix}` &&
+      normalizeIp(f.network)===c.network &&
+      normalizeIp(f.broadcast)===c.broadcast &&
+      normalizeIp(f.gateway)===c.gateway &&
+      normalizeIp(f.last)===c.last;
+
+    const s=document.getElementById("s"+i);
+    s.textContent=good?"✔ Correct":"✖ Incorrect";
+    s.className="status "+(good?"good":"bad");
+
+    if(!good){
+      ok=false;
+      explain.push(
+`Subnet ${i+1}
+Mask: ${c.mask}
+CIDR: /${c.prefix}
+Network: ${c.network}
+Broadcast: ${c.broadcast}
+Gateway: ${c.gateway}
+Last usable: ${c.last}`
+      );
     }
+  });
 
-    allocations.push(subnetInfo(cursor, prefix, gatewayPolicy));
-    cursor = (last + 1) >>> 0;
+  const res=document.getElementById("result");
+  res.style.display="";
+  if(ok){
+    res.innerHTML="<b style='color:var(--good)'>All subnets correct.</b>";
+  }else{
+    const link=buildAiLink(currentBase, expectedHosts);
+    res.innerHTML=`
+<details open>
+<summary><b>Show correct answers</b></summary>
+<pre>${explain.join("\n\n")}</pre>
+<a href="${link}" target="_blank">Ask AI to explain how to solve this</a>
+</details>`;
   }
-
-  return allocations;
 }
 
-/** UI **/
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-document.getElementById("calc").addEventListener("click", () => {
-  const msg = document.getElementById("msg");
-  const out = document.getElementById("out");
-  msg.textContent = "";
-  out.innerHTML = "";
-
-  try {
-    const base = parseCidr(document.getElementById("base").value);
-    const gatewayPolicy = document.getElementById("gateway").value;
-
-    const rawHosts = document.getElementById("hosts").value.trim();
-    if (!rawHosts) throw new Error("Enter at least one host requirement.");
-    const hosts = rawHosts.split(",").map(x => x.trim()).filter(Boolean).map(x => {
-      if (!/^\d+$/.test(x)) throw new Error(`Invalid host number: ${x}`);
-      return Number(x);
-    });
-
-    const prefixes = hosts.map(h => hostsToPrefix(h));
-    const allocations = allocateVlsm(base, prefixes, gatewayPolicy);
-
-    const rows = allocations.map((a, i) => `
-      <tr>
-        <td>${i+1}</td>
-        <td><code>${escapeHtml(a.cidr)}</code></td>
-        <td>${escapeHtml(a.netmask)}</td>
-        <td>${escapeHtml(a.network)}</td>
-        <td>${escapeHtml(a.broadcast)}</td>
-        <td>${escapeHtml(String(a.usableHosts))}</td>
-        <td>${escapeHtml(a.range)}</td>
-        <td>${escapeHtml(a.gateway)}</td>
-      </tr>
-    `).join("");
-
-    out.innerHTML = `
-      <div class="muted" style="margin-top:8px;">
-        Base: <code>${escapeHtml(base.cidr)}</code> • Allocated in largest→smallest order
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>CIDR</th>
-            <th>Netmask</th>
-            <th>Network ID</th>
-            <th>Broadcast</th>
-            <th>Usable hosts</th>
-            <th>Usable range</th>
-            <th>Gateway</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  } catch (e) {
-    msg.textContent = e?.message ?? String(e);
-  }
-});
+newQuestion();
 </script>
+
 </body>
 </html>
