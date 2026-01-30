@@ -8,11 +8,12 @@ The app is fully static, runs on GitHub Pages, and requires no backend, accounts
 **Live site:** https://concsp.github.io/subnetter/
 
 ## File Structure
+```text
 subnetter/
 ├── index.html
 ├── style.css
 └── script.js
-
+```
 ## Features
 - IPv4 subnetting and VLSM practice
 - Easy, Medium, and Hard difficulty modes
