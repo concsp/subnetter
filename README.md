@@ -1,5 +1,11 @@
 # Subnetter
 
+## File Structure
+subnetter/
+├─ index.html
+├─ style.css
+└─ script.js
+
 Subnetter is a lightweight, browser-based tool for practicing IPv4 subnetting, including VLSM, with realistic CCNA-style questions.
 
 It generates random subnetting problems, enforces proper largest-to-smallest allocation, and checks your work against correct address-block math. When you miss something, it shows the correct values and explains where things went wrong so you can learn from the mistake instead of guessing.
