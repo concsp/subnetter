@@ -5,71 +5,250 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Subnetter — IPv4 Subnetting Practice (VLSM)</title>
 
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
-<div class="container">
+  <div class="container">
 
-  <h1>Subnetter</h1>
-  <div class="sub">
-    Practice IPv4 subnetting & VLSM. Fill in Mask, CIDR, Network ID, Broadcast, First usable (Gateway), Last usable.
-  </div>
-
-  <div class="toolbar">
-    <div style="flex:1 1 240px;">
-      <label for="difficulty">Difficulty</label>
-      <select id="difficulty">
-        <option value="easy">Easy (1 subnet)</option>
-        <option value="medium">Medium (equal-size)</option>
-        <option value="hard">Hard (VLSM)</option>
-      </select>
+    <h1>Subnetter</h1>
+    <div class="sub">
+      Practice IPv4 subnetting & VLSM. Fill in Mask, CIDR, Network ID, Broadcast, First usable (Gateway), Last usable.
     </div>
-    <div style="flex:1 1 200px;">
-      <label>&nbsp;</label>
-      <button class="primary" id="newBtn">New Question</button>
+
+    <div class="toolbar">
+      <div style="flex:1 1 240px;">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty">
+          <option value="easy">Easy (1 subnet)</option>
+          <option value="medium">Medium (equal-size)</option>
+          <option value="hard">Hard (VLSM)</option>
+        </select>
+      </div>
+
+      <div style="flex:1 1 200px;">
+        <label>&nbsp;</label>
+        <button class="primary" id="newBtn" type="button">New Question</button>
+      </div>
+
+      <div style="flex:1 1 200px;">
+        <label>&nbsp;</label>
+        <button id="checkBtn" type="button">Check Answers</button>
+      </div>
     </div>
-    <div style="flex:1 1 200px;">
-      <label>&nbsp;</label>
-      <button id="checkBtn">Check Answers</button>
-    </div>
-  </div>
 
-  <div id="question" class="card" style="display:none;"></div>
-  <div id="inputs"></div>
-  <div id="result" class="card" style="display:none;"></div>
-
-</div>
-</div> <!-- end .container -->
-
-<div id="scorebar" class="scorebar">
-  <div><b>Streak:</b> <span id="streakNow">0</span></div>
-  <div><b>Best:</b> <span id="streakBest">0</span></div>
-</div>
-
-<div id="toast" class="toast" style="display:none;"></div>
-
-<div id="modalBackdrop" class="modalBackdrop" style="display:none;">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h2 id="modalTitle">Streak ended</h2>
-    <p id="modalBody"></p>
-    <div class="modalBtns">
-      <button id="modalReview" class="primary">Review Correct Answers</button>
-      <button id="modalNew">New Question</button>
-    </div>
-  </div>
-</div>
-
-<footer>
-  Built by Cameron ·
-  <a href="https://github.com/concsp" target="_blank">GitHub</a>
-</footer>
-
-<script src="script.js?v=2"></script>
-
-<!-- GoatCounter -->
-<script data-goatcounter="https://concsp.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+    <div id="question" class="card" style="display:none;"></div>
         
+    <div id="inputs"></div>
+    <div id="result" class="card" style="display:none;"></div>
+
+  </div> <!-- end .container -->
+
+  <div id="dockStack" class="dockStack">
+    <div id="guideDock" class="guideDock" style="display:none;">
+      <div class="dockTop">
+        <div><b>Subnetting Guide</b> <span class="small">(quick reference)</span></div>
+        <button id="guideMinBtn" type="button" class="miniBtn">–</button>
+      </div>
+
+      <div id="guideBody" class="guideBody">
+        <ol class="guideSteps">
+          <li>
+            <b>Host bits</b>
+            <div class="small">Smallest power of 2 that fits hosts (+2 for network/broadcast).</div>
+            <div class="mono">120 hosts → 2⁷ = 128 (126 usable)</div>
+          </li>
+
+          <li>
+            <b>CIDR</b>
+            <div class="mono">/prefix = 32 − host bits</div>
+          </li>
+
+          <li>
+            <b>Mask</b>
+            <div class="small">Write the dotted-decimal mask for the prefix.</div>
+          </li>
+
+          <li>
+            <b>Magic number</b>
+            <div class="small">In the subnetted octet:</div>
+            <div class="mono">256 − maskOctet = increment</div>
+          </li>
+
+          <li>
+            <b>List Network IDs</b>
+            <div class="small">Count by increment:</div>
+            <div class="mono">.0, .32, .64, …</div>
+          </li>
+
+          <li>
+            <b>For each subnet</b>
+            <div class="small">Network → usable range → broadcast</div>
+            <div class="mono">Net | (Net+1 … Bcast−1) | Bcast</div>
+          </li>
+        </ol>
+
+      <details class="guideExample">
+        <summary><b>Example walkthrough</b> (2 subnets, 110 hosts each)</summary>
+
+        <div class="guideExampleBody">
+
+          <p class="small" style="margin-top:10px;">
+            Scenario: You’re assigned <code>192.168.100.0/24</code>. You need two subnets that each support <b>110 hosts</b>.
+          </p>
+
+          <ol class="guideSteps guideExampleSteps">
+            <li>
+              <b>Host bits</b>
+              <div class="small">
+                Find the smallest power of 2 that can hold the required hosts (+2 reserved for network + broadcast).
+              </div>
+              <div class="mono">
+      Need 110 hosts → check powers of 2:
+      2^6 = 64 (too small)
+      2^7 = 128 (works)
+
+      Usable hosts = 128 − 2 = 126 (≥ 110)
+              </div>
+            </li>
+
+            <li>
+              <b>CIDR</b>
+              <div class="small">
+                IPs are 32 bits total. CIDR = 32 − host bits.
+              </div>
+              <div class="mono">
+      Host bits = 7 → CIDR = 32 − 7 = /25
+              </div>
+            </li>
+
+            <li>
+              <b>Subnet mask</b>
+              <div class="small">
+                Write /25 in binary: 25 network 1s, then 0s. Convert to decimal.
+              </div>
+              <div class="mono">
+      /25 = 11111111.11111111.11111111.10000000
+      Mask = 255.255.255.128
+              </div>
+            </li>
+
+            <li>
+              <b>Magic number</b>
+              <div class="small">
+                The “interesting octet” is where subnetting happens (here: 4th octet). Magic number = 256 − that mask octet.
+              </div>
+              <div class="mono">
+      Interesting octet = 4th (…255.255.255.128)
+      Magic number = 256 − 128 = 128
+
+      (Example: 255.255.255.192 → 256 − 192 = 64)
+              </div>
+            </li>
+
+            <li>
+              <b>Network IDs</b>
+              <div class="small">
+                Start at the first network in your assigned block, then add the magic number.
+              </div>
+              <div class="mono">
+      Assigned: 192.168.100.0/24
+      Subnets (/25) increment by 128:
+
+      Subnet 0 Network ID: 192.168.100.0
+      Subnet 1 Network ID: 192.168.100.128
+              </div>
+            </li>
+
+            <li>
+              <b>Broadcast + usable range</b>
+              <div class="small">
+                Broadcast = (Network ID + Magic Number − 1). Usable range is between network and broadcast.
+              </div>
+              <div class="mono">
+      Subnet 0:
+      Net:   192.168.100.0
+      Bcast: 192.168.100.127  (0 + 128 − 1)
+      Usable: 192.168.100.1  → 192.168.100.126
+
+      Subnet 1:
+      Net:   192.168.100.128
+      Bcast: 192.168.100.255  (128 + 128 − 1)
+      Usable: 192.168.100.129 → 192.168.100.254
+              </div>
+            </li>
+
+            <li>
+              <b>Fill the worksheet fields</b>
+              <div class="small">
+                For each subnet, your tool fields map like this:
+              </div>
+              <div class="mono">
+      Mask      → 255.255.255.128
+      CIDR      → /25
+      Network   → Net
+      Broadcast → Bcast
+      First     → Net + 1
+      Last      → Bcast − 1
+              </div>
+            </li>
+          </ol>
+        </div>
+      </details>
+
+      </div>
+    </div>    <!-- Assist + Guide docks get inserted here by JS, or you can place them here manually -->
+
+    <div id="assistDock" class="assistDock" style="display:none;">
+        <div class="assistHeader">
+          <div>
+            <b>Number Line (Assist Mode)</b>
+            <span class="small">drag horizontally</span>
+          </div>
+          <button id="assistMinBtn" class="miniBtn" type="button">–</button>
+        </div>
+        <div id="assistLine" class="assistLine"></div>
+    </div>
+  </div>
+
+
+
+  <!-- Sticky bottom bar -->
+  <div id="scorebar" class="scorebar">
+    <div class="scoreLeft">
+      <div><b>Streak:</b> <span id="streakNow">0</span></div>
+      <div><b>Best:</b> <span id="streakBest">0</span></div>
+    </div>
+
+    <div class="scoreRight">
+      <button id="guideToggle" type="button" class="scoreBtn">Guide</button>
+      <button id="binaryToggle" class="chipBtn" type="button">Binary: Off</button>
+      <button id="assistToggle" class="chipBtn" type="button">Assist: Off</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <div id="modalBackdrop" class="modalBackdrop" style="display:none;">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Streak ended</h2>
+      <p id="modalBody"></p>
+      <div class="modalBtns">
+        <button id="modalReview" class="primary" type="button">Review Correct Answers</button>
+        <button id="modalNew" type="button">New Question</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by Cameron ·
+    <a href="https://github.com/concsp" target="_blank">GitHub</a>
+  </footer>
+
+  <script src="script.js?v=3"></script>
+
+  <!-- GoatCounter -->
+  <script data-goatcounter="https://concsp.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

@@ -19,9 +19,9 @@ body{
 }
 
 .container{
-  max-width:980px;
-  margin:28px auto;
-  padding:0 16px 56px;
+  max-width: 980px;
+  margin: 28px auto;
+  padding: 0 16px 56px;
 }
 
 h1{ margin:0; font-size:26px; letter-spacing:.2px; }
@@ -34,12 +34,7 @@ h1{ margin:0; font-size:26px; letter-spacing:.2px; }
   margin-top:16px;
 }
 
-label{
-  font-size:13px;
-  color:var(--muted);
-  display:block;
-  margin-bottom:6px;
-}
+label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
 
 select, input, button{
   width:100%;
@@ -52,17 +47,13 @@ select, input, button{
 }
 
 select:focus, input:focus{
-  border-color:rgba(96,165,250,.65);
-  box-shadow:0 0 0 3px rgba(96,165,250,.14);
+  border-color: rgba(96,165,250,.65);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.14);
 }
 
-button{
-  cursor:pointer;
-  border-color:rgba(96,165,250,.35);
-}
-
+button{ cursor:pointer; border-color: rgba(96,165,250,.35); }
 button.primary{
-  background:linear-gradient(180deg, rgba(96,165,250,.28), rgba(96,165,250,.12));
+  background: linear-gradient(180deg, rgba(96,165,250,.28), rgba(96,165,250,.12));
 }
 
 .card{
@@ -108,19 +99,34 @@ code{
   color:var(--muted);
 }
 
-.status.good{
-  color:var(--good);
-  border-color:rgba(52,211,153,.35);
+.status {
+  display: none;
+}
+.status.good,
+.status.bad {
+  display: inline-block;
 }
 
-.status.bad{
-  color:var(--bad);
-  border-color:rgba(251,113,133,.35);
+.tips-list {
+  margin: 12px 0 0 18px;
+  padding: 0;
 }
+.tips-list li {
+  margin-bottom: 10px;
+}
+.tips-list .small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+
+
+.status.good{ color:var(--good); border-color: rgba(52,211,153,.35); }
+.status.bad{ color:var(--bad); border-color: rgba(251,113,133,.35); }
 
 .grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap:10px;
 }
 
@@ -138,45 +144,33 @@ details{
 
 summary{
   cursor:pointer;
+  color:var(--text);
   font-weight:600;
 }
 
 pre{
   white-space:pre-wrap;
   word-break:break-word;
+  color:var(--text);
   margin:10px 0 0;
   font-size:13px;
   line-height:1.35;
 }
 
-a{
-  color:var(--accent);
-  text-decoration:none;
-}
-
+a{ color:var(--accent); text-decoration:none; }
 a:hover{ text-decoration:underline; }
 
-footer{
-  margin-top:40px;
-  padding-top:16px;
-  border-top:1px solid rgba(148,163,184,.18);
-  text-align:center;
-  font-size:13px;
-  color:var(--muted);
-}
-
-/* ================= Score + Toast ================= */
-
+/* ================= Sticky score bar ================= */
 .scorebar{
   position: sticky;
   bottom: 0;
-  z-index: 10;
+  z-index: 40;
   margin: 14px auto 0;
   max-width: 980px;
   padding: 10px 12px;
   border: 1px solid rgba(148,163,184,.18);
   border-radius: 14px;
-  background: rgba(17,24,39,.7);
+  background: rgba(17,24,39,.78);
   backdrop-filter: blur(6px);
   display:flex;
   justify-content: space-between;
@@ -185,11 +179,25 @@ footer{
   font-size: 13px;
 }
 
+.scoreLeft{ display:flex; gap:14px; align-items:center; }
+.scoreRight{ display:flex; gap:10px; align-items:center; }
+
+.chipBtn{
+  width: auto;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.22);
+  background: rgba(17,24,39,.55);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* ================= Toast + pulse ================= */
 .toast{
   position: fixed;
   right: 16px;
-  bottom: 84px;
-  z-index: 20;
+  bottom: 92px;
+  z-index: 60;
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid rgba(96,165,250,.35);
@@ -199,10 +207,7 @@ footer{
   box-shadow: 0 20px 60px rgba(0,0,0,.45);
 }
 
-/* simple, non-annoying feedback animation */
-.pulse{
-  animation: pulse 550ms ease-out;
-}
+.pulse{ animation: pulse 550ms ease-out; }
 @keyframes pulse{
   0%{ transform: scale(1); }
   50%{ transform: scale(1.04); }
@@ -210,7 +215,6 @@ footer{
 }
 
 /* ================= Modal ================= */
-
 .modalBackdrop{
   position: fixed;
   inset: 0;
@@ -219,7 +223,7 @@ footer{
   align-items: center;
   justify-content: center;
   padding: 18px;
-  z-index: 30;
+  z-index: 80;
 }
 
 .modal{
@@ -232,21 +236,8 @@ footer{
   box-shadow: 0 20px 60px rgba(0,0,0,.55);
 }
 
-.modal h2{
-  margin: 0 0 8px 0;
-  font-size: 18px;
-}
-
-.modal p{
-  margin: 0 0 14px 0;
-  color: #94a3b8;
-  line-height: 1.35;
-}
-
-.modal p b {
-  color: var(--text);
-}
-
+.modal h2{ margin: 0 0 8px 0; font-size: 18px; }
+.modal p{ margin: 0 0 14px 0; color: #94a3b8; line-height: 1.35; }
 
 .modalBtns{
   display:flex;
@@ -254,3 +245,269 @@ footer{
   justify-content: flex-end;
   flex-wrap: wrap;
 }
+
+
+
+/* ================= Subnet view controls ================= */
+.miniBtn{
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(17,24,39,.55);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Collapsed: hide grid, show one-line summary */
+.subnet.collapsed .grid{ display:none; }
+.subnet.collapsed .collapsedRow{ display:block; }
+.collapsedRow{
+  display:none;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid rgba(148,163,184,.12);
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Compact: make inputs a single row (still editable) */
+.subnet.compact .grid{
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  gap: 8px;
+}
+.subnet.compact label{ display:none; }
+.subnet.compact input{ padding: 9px 10px; font-size: 13px; }
+
+/* On small screens, compact collapses back to normal stack */
+@media(max-width:820px){
+  .subnet.compact .grid{
+    grid-template-columns: 1fr;
+  }
+  .subnet.compact label{ display:block; }
+}
+
+/* ================= Assist Dock (Number Line) ================= */
+.assistDock{
+  position: sticky;
+  bottom: 58px; /* docks right above scorebar */
+  z-index: 45;
+  margin: 0 auto;
+  max-width: 980px;
+  padding: 12px;
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 16px;
+  background: rgba(17,24,39,.78);
+  backdrop-filter: blur(6px);
+}
+
+.assistHeader{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.assistLine{
+  overflow-x:auto;
+  padding: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 14px;
+  background: rgba(17,24,39,.55);
+  cursor: grab;
+  user-select: none;
+}
+.assistLine.dragging{ cursor: grabbing; }
+
+.assistRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.assistRow.bits{ margin-top:8px; }
+
+.assistCell{
+  flex: 0 0 auto;
+  min-width: 92px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(17,24,39,.62);
+  text-align:center;
+}
+.assistCell b{ display:block; font-size:14px; }
+.assistCell span{ display:block; font-size:12px; color: var(--muted); }
+
+footer{
+  margin-top:40px;
+  padding-top:16px;
+  border-top:1px solid rgba(148,163,184,.18);
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* Compact: 1 row, hide labels, keep placeholders */
+.subnet.compact .grid{
+  display:flex;
+  gap:10px;
+}
+.subnet.compact .grid > div{
+  flex: 1 1 0;
+}
+.subnet.compact label{
+  display:none;
+}
+
+/* ---- Dock shared header ---- */
+.dockTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+/* ---- Guide Dock ---- */
+.guideDock{
+  position: sticky;
+  left: 16px;
+  right: 16px;
+  bottom: 76px; /* sits above scorebar */
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(17,24,39,.70);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  z-index: 50;
+}
+
+.guideBody{
+  max-height: 48vh;
+  overflow:auto;
+  padding-right: 6px;
+}
+
+.guideSteps{
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+.guideSteps li{
+  margin: 10px 0;
+}
+.mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  color: rgba(229,231,235,.92);
+  background: rgba(148,163,184,.10);
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 12px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  white-space: pre-wrap;
+}
+
+.guideExample{
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(17,24,39,.48);
+}
+
+/* scorebar buttons */
+.scoreBtn{
+  width:auto;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(17,24,39,.65);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.scoreBtn.active{
+  border-color: rgba(96,165,250,.65);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.14);
+  background: linear-gradient(180deg, rgba(96,165,250,.24), rgba(96,165,250,.10));
+}
+
+/* Make sure the dock itself never grows into the scorebar */
+/* Guide sits above scorebar and is large/readable */
+.guideDock{
+  position: sticky;
+  left: 16px;
+  right: 16px;
+  bottom: 92px;           /* above scorebar */
+  max-width: 980px;
+  margin: 0 auto;
+  z-index: 95;
+
+  background: rgba(17,24,39,.70);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  /* KEY: big window but never runs off screen */
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
+}
+
+/* Expanded reading area */
+.guideBody{
+  max-height: calc(100vh - 220px); /* big */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+/* Collapsed state (just header row) */
+.guideDock.collapsed .guideBody{
+  display: none;
+}
+
+
+.dockTop{
+  position: sticky;
+  top: 0;
+  background: rgba(17,24,39,.70);
+  padding: 6px 0 10px;
+  z-index: 1;
+}
+
+.guideExampleBody{
+  margin-top: 8px;
+}
+.guideExampleSteps{
+  margin-top: 10px;
+}
+
+/* Holds multiple docks stacked above scorebar */
+.dockStack{
+  position: sticky;
+  bottom: 92px;          /* sits above scorebar */
+  z-index: 45;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;  /* lets the page scroll normally */
+}
+
+/* re-enable clicking inside docks */
+.dockStack > *{ pointer-events: auto; }
