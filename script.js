@@ -231,7 +231,7 @@ function renderQuestion(diff){
     <b>Assigned block:</b> <code>${intToIp(currentBase.net)}/${currentBase.prefix}</code>
     <div class="small" style="margin-top:6px;">Requirements (largest first):</div>
     <ul style="margin:10px 0 0 18px;">
-      ${expectedHosts.map((h,i)=>`<li><b>Subnet ${i+1}</b>: ${h} hosts</li>`).join("")}
+      ${expectedHosts.map((h,i)=>`<li><b>Subnet ${i}</b>: ${h} hosts</li>`).join("")}
     </ul>
     ${reminder}
   `;
@@ -241,7 +241,7 @@ function renderInputs(){
   els.inputs.innerHTML = current.map((_,i)=>`
     <div class="subnet">
       <div class="subnetHeader">
-        <div><b>Subnet ${i+1}</b> <span class="small">(${expectedHosts[i]} hosts)</span></div>
+        <div><b>Subnet ${i}</b> <span class="small">(${expectedHosts[i]} hosts)</span></div>
         <div class="status" id="s${i}">—</div>
       </div>
 
@@ -355,7 +355,7 @@ function checkAnswers(){
       status.className = "status bad";
 
       explain.push(
-`Subnet ${i+1} (${expectedHosts[i]} hosts)
+`Subnet ${i} (${expectedHosts[i]} hosts)
 
 Correct values:
   Mask: ${c.mask}
