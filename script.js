@@ -72,6 +72,21 @@ function normalizeMaskEither(v){
   return normalizeIpEither(v);
 }
 
+/**
+ * Accept "24" OR "/24" (and surrounding whitespace).
+ * Return number 0..32, or null if invalid/empty.
+ */
+function normalizeCidr(v){
+  const t = (v || "").trim();
+  if (!t) return null;
+
+  const s = t.startsWith("/") ? t.slice(1).trim() : t;
+  if (!/^\d{1,2}$/.test(s)) return null;
+
+  const n = Number(s);
+  return (n >= 0 && n <= 32) ? n : null;
+}
+
 function convertInputValueForMode(inp){
   const t = (inp.value || "").trim();
   if (!t) return;
@@ -205,8 +220,6 @@ const els = {
   result: document.getElementById("result"),
 };
 
-
-
 const binaryBtn = document.getElementById("binaryToggle");
 const assistToggle = document.getElementById("assistToggle");
 const assistDock = document.getElementById("assistDock");
@@ -217,12 +230,9 @@ const guideDock = document.getElementById("guideDock");
 const guideMinBtn = document.getElementById("guideMinBtn");
 const guideBody = document.getElementById("guideBody");
 
-
 let current = [];
 let expectedHosts = [];
 let currentBase = null;
-
-
 
 /* ================= Scoreboard + anti-farming ================= */
 const SCORE_KEY = "subnetter_best_streak";
@@ -507,7 +517,7 @@ function checkAnswers(){
 
     const good =
       normalizeMaskEither(u.mask) === c.mask &&
-      Number((u.cidr||"").trim()) === c.prefix &&
+      normalizeCidr(u.cidr) === c.prefix &&          // <-- FIX: accepts "24" or "/24"
       normalizeIpEither(u.network) === c.network &&
       normalizeIpEither(u.broadcast) === c.broadcast &&
       normalizeIpEither(u.gateway) === c.gateway &&
